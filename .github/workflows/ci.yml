@@ -14,7 +14,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -33,6 +32,11 @@ jobs:
         run: |
           sudo apt update
           sudo apt install extra-cmake-modules gettext
+
+      - name: Init submodules
+        run: |
+          git config core.filemode false
+          git submodule update --init --recursive --jobs 4
 
       - name: Ensure executable scripts
         run: |
