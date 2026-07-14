@@ -34,6 +34,11 @@ jobs:
           sudo apt update
           sudo apt install extra-cmake-modules gettext
 
+      - name: Ensure executable scripts
+        run: |
+          chmod +x ./prepare_personal_build.sh
+          chmod +x ./gradlew
+
       - name: Prepare personal build sources
         run: |
           ./prepare_personal_build.sh
