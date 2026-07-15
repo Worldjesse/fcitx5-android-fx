@@ -249,8 +249,8 @@ class CommonKeyActionListener :
                     // 输入法当前持有的合成文本。数字键盘输入常被 fcitx 暂存在 preedit 而非立即
                     // 提交，getTextBeforeCursor 取不到这段内容（部分编辑器甚至返回 null），
                     // 这正是原逻辑总是取到空串、提示"未找到可计算的表达式"的根因。
-                    val preedit = fcitx.clientPreeditCached.toString()
-                        .ifBlank { fcitx.inputPanelCached.preedit.toString() }
+                    val preedit = fcitx.runImmediately { clientPreeditCached.toString() }
+                        .ifBlank { fcitx.runImmediately { inputPanelCached.preedit.toString() } }
                     // 编辑器可能已把合成文本计入 before，避免重复拼接
                     val overlapped = preedit.isNotBlank() && before.endsWith(preedit)
                     val full = if (overlapped) before else before + preedit
@@ -270,7 +270,7 @@ class CommonKeyActionListener :
                                 }
                                 service.postFcitxJob {
                                     // 丢弃合成区（不提交），避免与结果重复
-                                    if (preedit.isNotBlank()) fcitx.reset()
+                                    if (preedit.isNotBlank()) reset()
                                     service.lifecycleScope.launch {
                                         ic.withBatchEdit {
                                             if (committedExprLen > 0) {
