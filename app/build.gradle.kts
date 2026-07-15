@@ -55,6 +55,14 @@ android {
                 )
             }
         }
+
+        // Allow limiting native ABI via -Pabi=arm64-v8a (smaller CI artifacts)
+        ndk {
+            (project.findProperty("abi") as? String)?.let { abi ->
+                abiFilters.clear()
+                abiFilters.add(abi)
+            }
+        }
     }
 
     flavorDimensions += "brand"
@@ -81,6 +89,11 @@ android {
             resValue("mipmap", "app_icon_round", "@mipmap/ic_launcher_round")
             resValue("string", "app_name", "@string/app_name_release")
             proguardFile("proguard-rules.pro")
+            // Personal build: reuse debug signing so release APK installs without
+            // configuring a release keystore. Enable minify + shrink for smaller APK.
+            signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            isShrinkResources = true
         }
         debug {
             resValue("mipmap", "app_icon", "@mipmap/ic_launcher_debug")
