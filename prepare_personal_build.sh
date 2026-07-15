@@ -24,6 +24,9 @@ while IFS=' ' read -r key url; do
   mkdir -p "$(dirname "$path")"
   rm -rf "$path"
   git clone --depth 1 "$url" "$path" || echo "  CLONE FAILED: $path"
+  # Recursively init nested submodules inside this repo (e.g. libime has kenlm)
+  git -C "$path" submodule update --init --recursive --depth 1 2>/dev/null || \
+    echo "  (nested submodule init had issues for $path)"
 done < <(git config --file .gitmodules --get-regexp 'submodule\..*\.url$')
 
 RIME_DIR=plugin/rime/src/main/cpp/fcitx5-rime
