@@ -29,23 +29,19 @@ while IFS=' ' read -r key url; do
     echo "  (nested submodule init had issues for $path)"
 done < <(git config --file .gitmodules --get-regexp 'submodule\..*\.url$')
 
-RIME_DIR=plugin/rime/src/main/cpp/fcitx5-rime
-FCITX5_DIR=lib/fcitx5/src/main/cpp/fcitx5
 PREBUILT_DIR=lib/fcitx5/src/main/cpp/prebuilt
 
-# update fcitx5-rime to fxliang master
-echo "updating fcitx5-rime"
-git -C "$RIME_DIR" remote add gh https://github.com/fxliang/fcitx5-rime.git 2>/dev/null || \
-  git -C "$RIME_DIR" remote set-url gh https://github.com/fxliang/fcitx5-rime.git
-git -C "$RIME_DIR" fetch -v gh master
-git -C "$RIME_DIR" checkout gh/master
-sed -i 's|/fcitx/|/fxliang/|g' plugin/rime/licenses/libraries/fcitx5-rime.json
-
-# apply fcitx5 patch from fcitx5-rime
-echo "applying fcitx5 patch"
-git -C "$FCITX5_DIR" checkout -- .
-git -C "$FCITX5_DIR" apply "$RIME_DIR/fcitx5-alt-trigger-v4point1.patch" || \
-  echo "fcitx5 patch already applied or failed"
+# NOTE: fcitx5-rime is intentionally kept at the UPSTREAM version (cloned by the
+# loop above from fcitx/fcitx5-rime) instead of switching to fxliang/fcitx5-rime.
+# The fxliang frontend requires InputMethodEngineV4Point1, which is injected by a
+# local patch (fcitx5-alt-trigger-v4point1.patch) onto the fcitx5 core. That patch
+# no longer applies cleanly against the floating upstream fcitx5 master, so the
+# plugin build fails with "unknown class name 'InputMethodEngineV4Point1'".
+# Upstream fcitx5-rime is API-compatible with upstream fcitx5 master and builds
+# reliably. The bundled 万象 (wanxiang) data under plugin/rime/src/main/cpp/ is
+# frontend-version-independent, so 万象 keeps working. Trade-off: we lose the
+# fxliang alt-trigger (Shift_L) behaviour; it can be re-added later once fcitx5 is
+# pinned to a version the patch applies against.
 
 # update prebuilt
 echo "updating prebuilt"
