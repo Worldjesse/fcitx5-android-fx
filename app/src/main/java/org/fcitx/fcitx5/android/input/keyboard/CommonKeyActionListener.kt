@@ -244,22 +244,46 @@ class CommonKeyActionListener :
                 }
                 is CalculateAction -> {
                     val ic = service.currentInputConnection ?: return@KeyActionListener
+                    // 已提交的文本
                     val before = ic.getTextBeforeCursor(1024, 0)?.toString().orEmpty()
-                    val expr = ExpressionEvaluator.extractExpression(before)
-                    if (expr != null) {
+                    // 输入法当前持有的合成文本。数字键盘输入常被 fcitx 暂存在 preedit 而非立即
+                    // 提交，getTextBeforeCursor 取不到这段内容（部分编辑器甚至返回 null），
+                    // 这正是原逻辑总是取到空串、提示"未找到可计算的表达式"的根因。
+                    val preedit = fcitx.clientPreeditCached.toString()
+                        .ifBlank { fcitx.inputPanelCached.preedit.toString() }
+                    // 编辑器可能已把合成文本计入 before，避免重复拼接
+                    val overlapped = preedit.isNotBlank() && before.endsWith(preedit)
+                    val full = if (overlapped) before else before + preedit
+                    val expr = ExpressionEvaluator.extractExpression(full)
+                    if (expr == null) {
+                        context.toast("未找到可计算的表达式")
+                    } else {
                         ExpressionEvaluator.evaluate(expr).fold(
                             onSuccess = { value ->
                                 val formatted = ExpressionEvaluator.formatResult(value)
-                                ic.withBatchEdit {
-                                    ic.finishComposingText()
-                                    ic.deleteSurroundingText(expr.length, 0)
-                                    ic.commitText(formatted, 1)
+                                // 表达式落在 preedit 中的长度，决定是否需要先清合成区、以及要从
+                                // 已提交文本中删掉多少
+                                val committedExprLen = if (overlapped) {
+                                    expr.length
+                                } else {
+                                    maxOf(0, expr.length - preedit.length)
+                                }
+                                service.postFcitxJob {
+                                    // 丢弃合成区（不提交），避免与结果重复
+                                    if (preedit.isNotBlank()) fcitx.reset()
+                                    service.lifecycleScope.launch {
+                                        ic.withBatchEdit {
+                                            if (committedExprLen > 0) {
+                                                ic.deleteSurroundingText(committedExprLen, 0)
+                                            }
+                                            ic.finishComposingText()
+                                            ic.commitText(formatted, 1)
+                                        }
+                                    }
                                 }
                             },
                             onFailure = { e -> context.toast(e.message ?: "计算失败") }
                         )
-                    } else {
-                        context.toast("未找到可计算的表达式")
                     }
                 }
                 else -> {}
