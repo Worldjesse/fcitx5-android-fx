@@ -55,14 +55,6 @@ android {
                 )
             }
         }
-
-        // Allow limiting native ABI via -Pabi=arm64-v8a (smaller CI artifacts)
-        ndk {
-            (project.findProperty("abi") as? String)?.let { abi ->
-                abiFilters.clear()
-                abiFilters.add(abi)
-            }
-        }
     }
 
     flavorDimensions += "brand"
