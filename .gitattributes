@@ -1,0 +1,7 @@
+plugin/rime/src/main/cpp/wanxiang/dicts/** filter=lfs diff=lfs merge=lfs -text
+plugin/rime/src/main/cpp/wanxiang/lua/data/** filter=lfs diff=lfs merge=lfs -text
+# 非 LFS 的文本文件统一 LF，避免 Windows 上 CRLF 影响 RIME 解析
+plugin/rime/src/main/cpp/wanxiang/*.yaml text eol=lf
+plugin/rime/src/main/cpp/wanxiang/*.dict.yaml text eol=lf
+plugin/rime/src/main/cpp/wanxiang/*.txt text eol=lf
+plugin/rime/src/main/cpp/wanxiang/lua/wanxiang/*.lua text eol=lf

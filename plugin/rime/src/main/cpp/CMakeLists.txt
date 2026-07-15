@@ -57,3 +57,26 @@ install(FILES
         DESTINATION "${FCITX_INSTALL_DATADIR}/rime-data"
         COMPONENT prebuilt-assets
         )
+
+# 万象拼音 (wanxiang) — 打包为默认 RIME 方案
+# 源码来自 rime-wanxiang v16.1.1 release 的 base 包。注意上游不公开分发语法模型
+# wanxiang-lts-zh-hans.gram，缺失时仅丢失句子级语法预测，拼音输入仍可用。
+set(WANXIANG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/wanxiang")
+install(DIRECTORY "${WANXIANG_DIR}/lua" "${WANXIANG_DIR}/dicts"
+        DESTINATION "${FCITX_INSTALL_DATADIR}/rime-data"
+        COMPONENT prebuilt-assets)
+install(FILES
+        "${WANXIANG_DIR}/wanxiang.schema.yaml"
+        "${WANXIANG_DIR}/wanxiang.dict.yaml"
+        "${WANXIANG_DIR}/wanxiang_algebra.yaml"
+        "${WANXIANG_DIR}/wanxiang_symbols.yaml"
+        "${WANXIANG_DIR}/wanxiang_english.schema.yaml"
+        "${WANXIANG_DIR}/wanxiang_english.dict.yaml"
+        "${WANXIANG_DIR}/wanxiang_mixedcode.schema.yaml"
+        "${WANXIANG_DIR}/wanxiang_mixedcode.dict.yaml"
+        "${WANXIANG_DIR}/wanxiang_reverse.schema.yaml"
+        "${WANXIANG_DIR}/wanxiang_reverse.dict.yaml"
+        "${WANXIANG_DIR}/wanxiang_t9.schema.yaml"
+        "${WANXIANG_DIR}/custom_phrase.txt"
+        DESTINATION "${FCITX_INSTALL_DATADIR}/rime-data"
+        COMPONENT prebuilt-assets)

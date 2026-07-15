@@ -25,6 +25,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+          lfs: true
 
       - name: Setup Java
         uses: actions/setup-java@v5

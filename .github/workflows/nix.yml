@@ -14,6 +14,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+          lfs: true
       - uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
