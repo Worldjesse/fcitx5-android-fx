@@ -54,3 +54,12 @@ jobs:
         with:
           name: app-fx-release
           path: app/build/outputs/apk/fx/release/*.apk
+
+      - name: Build rime plugin release (arm64-v8a, matches fx app ABI)
+        run: ./gradlew :plugin:rime:assembleRelease -PbuildABI=arm64-v8a
+
+      - name: Upload rime plugin APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: rime-plugin-release
+          path: plugin/rime/build/outputs/apk/release/*.apk
