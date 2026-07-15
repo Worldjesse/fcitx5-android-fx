@@ -33,14 +33,6 @@ jobs:
           sudo apt update
           sudo apt install extra-cmake-modules gettext
 
-      - name: Init submodules
-        run: |
-          git config core.filemode false
-          git submodule sync --recursive
-          git submodule update --init --recursive --jobs 4 || echo "submodule update partial failure; prepare_personal_build.sh will self-heal"
-          git submodule status
-          git submodule status
-
       - name: Ensure executable scripts
         run: |
           chmod +x ./prepare_personal_build.sh

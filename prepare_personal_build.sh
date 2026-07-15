@@ -4,37 +4,27 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_ROOT"
 
-# Best-effort submodule init: tolerate individual failures (e.g. rime/prebuilt
-# upstream URLs may be unreachable). We self-heal critical directories below.
-echo "initializing submodules (best-effort)"
 git config core.filemode false
-git submodule sync --recursive
-git submodule update --init --recursive --jobs 4 || echo "submodule update had failures; will self-heal critical dirs"
 
-# Self-heal: ensure three critical dirs exist as proper git repos.
-# If a dir is a broken empty gitlink, remove it; otherwise clone fresh.
-ensure_repo() {
-  local dir="$1"
-  local url="$2"
-  if [ -d "$dir" ]; then
-    # If it's a submodule pointer (file .git) or an actual .git dir, nuke and re-clone
-    if [ -f "$dir/.git" ] || [ -d "$dir/.git" ]; then
-      echo "resetting existing $dir"
-      rm -rf "$dir"
-    else
-      echo "warning: $dir exists and is not a git repo, leaving as-is"
-      return 0
-    fi
+# This repo's HEAD has NO submodule gitlinks (submodules were never
+# `git submodule add`-ed; only .gitmodules declares them). So `git submodule
+# update --init` cannot work. Instead we read .gitmodules and git clone every
+# missing submodule directly.
+echo "cloning all submodules from .gitmodules"
+while IFS=' ' read -r key url; do
+  # key = submodule.<path>.url, url = https://github.com/...
+  section="${key%.url}"
+  section="${section#submodule.}"
+  path="$section"
+  if [ -d "$path/.git" ] || [ -f "$path/.git" ]; then
+    echo "  skip (exists): $path"
+    continue
   fi
-  if [ ! -d "$dir" ]; then
-    echo "cloning $url -> $dir"
-    git clone "$url" "$dir"
-  fi
-}
-
-ensure_repo plugin/rime/src/main/cpp/fcitx5-rime https://github.com/fxliang/fcitx5-rime.git
-ensure_repo lib/fcitx5/src/main/cpp/prebuilt   https://github.com/fxliang/prebuilt.git
-ensure_repo lib/fcitx5/src/main/cpp/fcitx5     https://github.com/fcitx/fcitx5.git
+  echo "  cloning $url -> $path"
+  mkdir -p "$(dirname "$path")"
+  rm -rf "$path"
+  git clone --depth 1 "$url" "$path" || echo "  CLONE FAILED: $path"
+done < <(git config --file .gitmodules --get-regexp 'submodule\..*\.url$')
 
 RIME_DIR=plugin/rime/src/main/cpp/fcitx5-rime
 FCITX5_DIR=lib/fcitx5/src/main/cpp/fcitx5
